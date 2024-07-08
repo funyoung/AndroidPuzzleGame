@@ -31,16 +31,16 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
         // 生成随机小球
         val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.CYAN)
         val random = Random(System.currentTimeMillis())
+
         val numLines = random.nextInt(4, 7)
         val numBallsPerLine = random.nextInt(5, 8)
         val spacingX = 300f // width.toFloat() / (numLines + 1)
 
         for (i in 1..numLines) {
             val lineBalls = mutableListOf<Ball>()
-            val startX = i * spacingX
-            val spacingY = 100f  //height.toFloat() / (numBallsPerLine + 1)
+            val x = i * spacingX
+            val spacingY = 100f
             for (j in 1..numBallsPerLine) {
-                val x = startX //+ random.nextInt(-50, 50)
                 val y = j * spacingY
                 val color = colors.random(random)
                 val ball = Ball(x, y, 50f, color)
@@ -68,11 +68,11 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
                 }
                 canvas.drawCircle(ball.x, ball.y, ball.radius, paint)
             }
-            canvas.drawPath(path, Paint().apply {
-                color = Color.BLACK
-                style = Paint.Style.STROKE
-                strokeWidth = 5f
-            })
+//            canvas.drawPath(path, Paint().apply {
+//                color = Color.BLACK
+//                style = Paint.Style.STROKE
+//                strokeWidth = 5f
+//            })
         }
     }
 
