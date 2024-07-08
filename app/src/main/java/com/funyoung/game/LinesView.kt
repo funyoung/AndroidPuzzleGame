@@ -91,7 +91,7 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
             lines.forEach { line ->
                 if (line !== selectedBalls && line.isNotEmpty()) {
                     val bottomBall = line.last()
-                    if (hypot(bottomBall.x - currentX, bottomBall.y - currentY) <= bottomBall.radius) {
+                    if (hypot(bottomBall.x - currentX, bottomBall.radius + bottomBall.y - currentY) <= bottomBall.radius) {
                         val deltaX = bottomBall.x - selectedBalls.first().x
                         val deltaY = bottomBall.y - selectedBalls.first().y + bottomBall.radius + selectedBalls.first().radius
                         selectedBalls.forEach {
@@ -109,6 +109,8 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
                 lines[selectedLine].addAll(selectedBalls)
                 selectedBalls.clear()
             }
+
+            invalidate()
         }
     }
 
