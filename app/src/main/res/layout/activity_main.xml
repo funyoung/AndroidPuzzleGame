@@ -53,4 +53,18 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/cameraButton" />
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/ballDragButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:layout_marginStart="16dp"
+        android:clickable="true"
+        android:onClick="onBallDragClick"
+        android:src="@mipmap/ic_launcher"
+        android:tint="@android:color/white"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginLeft="16dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

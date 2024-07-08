@@ -38,6 +38,8 @@ import static java.lang.Math.abs;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.funyoung.game.BallDragActivity;
+
 public class MainActivity extends AppCompatActivity {
     String mCurrentPhotoPath;
     private static final int REQUEST_PERMISSION_WRITE_EXTERNAL_STORAGE = 2;
@@ -146,5 +148,11 @@ public class MainActivity extends AppCompatActivity {
             intent.setType("image/*");
             startActivityForResult(intent, REQUEST_IMAGE_GALLERY);
         }
+    }
+
+    public void onBallDragClick(View view) {
+        Intent intent = new Intent(getApplicationContext(), BallDragActivity.class);
+        // intent.putExtra("assetName", files[i % files.length]);
+        startActivity(intent);
     }
 }
