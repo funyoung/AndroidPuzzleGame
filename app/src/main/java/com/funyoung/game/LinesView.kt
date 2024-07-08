@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Path
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -19,8 +18,10 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     private var selectedBalls = mutableListOf<Ball>()
     private var selectedLine = -1
 
-    private var offsetX = 0f
-    private var offsetY = 0f
+    private var startX = 0f
+    private var startY = 0f
+    private var currentX = 0f
+    private var currentY = 0f
 
     init {
         // 初始化小球和连线
@@ -57,86 +58,79 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        lines.forEach { line ->
-            val path = Path()
-            line.forEachIndexed { index, ball ->
-                val paint = Paint().apply {
-                    color = ball.color
-                    style = Paint.Style.FILL
-                }
-                if (index == 0) {
-                    path.moveTo(ball.x, ball.y)
-                } else {
-                    path.lineTo(ball.x, ball.y)
-                }
-                canvas.drawCircle(ball.x, ball.y, ball.radius, paint)
+        lines.forEach { line -> drawLine(canvas, line)}
+        drawLine(canvas, selectedBalls, currentX - startX, currentY - startY)
+    }
+
+    private fun drawLine(canvas: Canvas, line: List<Ball>, dx: Float = 0f, dy: Float = 0f) {
+        line.forEach {ball ->
+            val paint = Paint().apply {
+                color = ball.color
+                style = Paint.Style.FILL
             }
-//            canvas.drawPath(path, Paint().apply {
-//                color = Color.BLACK
-//                style = Paint.Style.STROKE
-//                strokeWidth = 5f
-//            })
+
+            canvas.drawCircle(ball.x + dx, ball.y + dy, ball.radius, paint)
         }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        val x = event.x
-        val y = event.y
+        currentX = event.x
+        currentY = event.y
 
         when (event.action) {
-            MotionEvent.ACTION_DOWN -> cutLine(x, y)
-            MotionEvent.ACTION_MOVE -> dragLine(x, y)
-            MotionEvent.ACTION_UP -> dropLine(x, y)
+            MotionEvent.ACTION_DOWN -> cutLine()
+            MotionEvent.ACTION_MOVE -> dragLine()
+            MotionEvent.ACTION_UP -> dropLine()
         }
         return true
     }
 
-    private fun dropLine(x: Float, y: Float) {
-        selectedBalls.clear()
-    }
-
-    private fun dragLine(x: Float, y: Float) {
-        selectedBalls.forEach { ball ->
-            ball.x = x - offsetX
-            ball.y = y - offsetY
-        }
-
-        // 检查是否连接到其他直线底部的球上
-        lines.forEach { line ->
-            if (line !== selectedBalls && line.isNotEmpty()) {
-                val bottomBall = line.last()
-                if (hypot(bottomBall.x - x, bottomBall.y - y) <= bottomBall.radius) {
-                    // 断开原来的直线
-                    selectedBalls.forEach { ball ->
-                        lines.forEach { oldLine ->
-                            oldLine.remove(ball)
+    private fun dropLine() {
+        if (selectedBalls.isNotEmpty()) {
+            // 检查是否连接到其他直线底部的球上
+            lines.forEach { line ->
+                if (line !== selectedBalls && line.isNotEmpty()) {
+                    val bottomBall = line.last()
+                    if (hypot(bottomBall.x - currentX, bottomBall.y - currentY) <= bottomBall.radius) {
+                        val deltaX = bottomBall.x - selectedBalls.first().x
+                        val deltaY = bottomBall.y - selectedBalls.first().y + bottomBall.radius + selectedBalls.first().radius
+                        selectedBalls.forEach {
+                            it.x += deltaX
+                            it.y += deltaY
                         }
+                        line.addAll(selectedBalls)
+                        selectedBalls.clear()
+                        return@forEach
                     }
-                    // 连接到新的直线
-                    line.addAll(selectedBalls)
-                    selectedBalls.clear()
-                    generateBallsAndLines()
-                    return
                 }
             }
-        }
 
+            if (selectedBalls.isNotEmpty()) {
+                lines[selectedLine].addAll(selectedBalls)
+                selectedBalls.clear()
+            }
+        }
+    }
+
+    private fun dragLine() {
         invalidate()
     }
 
     // 遍历检查按下出，点中小球的所在栏(停止拖拽时可能回弹回来)
     // 该小球和该栏它后面的小球都移进选择球的列表中
-    private fun cutLine(x: Float, y: Float) {
+    private fun cutLine() {
+        startX = currentX
+        startY = currentY
+
         var pos = -1
         selectedLine = -1
 
         selectedBalls.clear()
         lines.forEachIndexed { index, line ->
             line.forEachIndexed { current, ball ->
-                if (hypot(ball.x - x, ball.y - y) <= ball.radius) {
+                if (hypot(ball.x - startX, ball.y - startY) <= ball.radius) {
                     selectedLine = index
                     pos = current
-                    //selectedBalls.add(ball)
                     return@forEachIndexed // 退出当前的 forEachIndexed 循环
                 }
             }
@@ -148,9 +142,6 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
         if (pos >= 0 && selectedLine >= 0) {
             selectedBalls.addAll(lines[selectedLine].removeFrom(pos))
         }
-
-        offsetX = x - (selectedBalls.firstOrNull()?.x ?: 0f)
-        offsetY = y - (selectedBalls.firstOrNull()?.y ?: 0f)
     }
 
     private fun <T> MutableList<T>.removeFrom(index: Int): MutableList<T> {
