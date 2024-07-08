@@ -81,51 +81,57 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
         val y = event.y
 
         when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                selectedBalls.clear()
-                lines.forEach { line ->
-                    line.forEach { ball ->
-                        if (hypot(ball.x - x, ball.y - y) <= ball.radius) {
-                            selectedBalls.add(ball)
-                        }
-                    }
-                }
-                offsetX = x - (selectedBalls.firstOrNull()?.x ?: 0f)
-                offsetY = y - (selectedBalls.firstOrNull()?.y ?: 0f)
-            }
-            MotionEvent.ACTION_MOVE -> {
-                selectedBalls.forEach { ball ->
-                    ball.x = x - offsetX
-                    ball.y = y - offsetY
-                }
-
-                // 检查是否连接到其他直线底部的球上
-                lines.forEach { line ->
-                    if (line !== selectedBalls && line.isNotEmpty()) {
-                        val bottomBall = line.last()
-                        if (hypot(bottomBall.x - x, bottomBall.y - y) <= bottomBall.radius) {
-                            // 断开原来的直线
-                            selectedBalls.forEach { ball ->
-                                lines.forEach { oldLine ->
-                                    oldLine.remove(ball)
-                                }
-                            }
-                            // 连接到新的直线
-                            line.addAll(selectedBalls)
-                            selectedBalls.clear()
-                            generateBallsAndLines()
-                            return true
-                        }
-                    }
-                }
-
-                invalidate()
-            }
-            MotionEvent.ACTION_UP -> {
-                selectedBalls.clear()
-            }
+            MotionEvent.ACTION_DOWN -> cutLine(x, y)
+            MotionEvent.ACTION_MOVE -> dragLine(x, y)
+            MotionEvent.ACTION_UP -> dropLine(x, y)
         }
         return true
+    }
+
+    private fun dropLine(x: Float, y: Float) {
+        selectedBalls.clear()
+    }
+
+    private fun dragLine(x: Float, y: Float) {
+        selectedBalls.forEach { ball ->
+            ball.x = x - offsetX
+            ball.y = y - offsetY
+        }
+
+        // 检查是否连接到其他直线底部的球上
+        lines.forEach { line ->
+            if (line !== selectedBalls && line.isNotEmpty()) {
+                val bottomBall = line.last()
+                if (hypot(bottomBall.x - x, bottomBall.y - y) <= bottomBall.radius) {
+                    // 断开原来的直线
+                    selectedBalls.forEach { ball ->
+                        lines.forEach { oldLine ->
+                            oldLine.remove(ball)
+                        }
+                    }
+                    // 连接到新的直线
+                    line.addAll(selectedBalls)
+                    selectedBalls.clear()
+                    generateBallsAndLines()
+                    return
+                }
+            }
+        }
+
+        invalidate()
+    }
+
+    private fun cutLine(x: Float, y: Float) {
+        selectedBalls.clear()
+        lines.forEach { line ->
+            line.forEach { ball ->
+                if (hypot(ball.x - x, ball.y - y) <= ball.radius) {
+                    selectedBalls.add(ball)
+                }
+            }
+        }
+        offsetX = x - (selectedBalls.firstOrNull()?.x ?: 0f)
+        offsetY = y - (selectedBalls.firstOrNull()?.y ?: 0f)
     }
 
     data class Ball(var x: Float, var y: Float, val radius: Float, val color: Int)
