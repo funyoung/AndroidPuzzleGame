@@ -5,19 +5,17 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
-import android.os.Build
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
-import androidx.annotation.RequiresApi
-import java.util.concurrent.ThreadLocalRandom
 import kotlin.math.hypot
+import kotlin.random.Random
 
 class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
-    private val lines = mutableListOf<List<Ball>>()
+    private val lines = mutableListOf<MutableList<Ball>>()
     private val balls = mutableListOf<Ball>()
-    private val selectedBalls = mutableListOf<Ball>()
+    private var selectedBalls = mutableListOf<Ball>()
     private var offsetX = 0f
     private var offsetY = 0f
 
@@ -32,19 +30,19 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
         // 生成随机小球
         val colors = listOf(Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.CYAN)
-        val random = ThreadLocalRandom.current()
-        val numLines = random.nextInt(2, 4)
-        val numBallsPerLine = random.nextInt(3, 6)
+        val random = Random(System.currentTimeMillis())
+        val numLines = random.nextInt(4, 7)
+        val numBallsPerLine = random.nextInt(5, 8)
         val spacingX = 300f // width.toFloat() / (numLines + 1)
 
         for (i in 1..numLines) {
             val lineBalls = mutableListOf<Ball>()
             val startX = i * spacingX
-            val spacingY = 50f  //height.toFloat() / (numBallsPerLine + 1)
+            val spacingY = 100f  //height.toFloat() / (numBallsPerLine + 1)
             for (j in 1..numBallsPerLine) {
-                val x = startX + random.nextInt(-50, 50)
+                val x = startX //+ random.nextInt(-50, 50)
                 val y = j * spacingY
-                val color = colors.random()
+                val color = colors.random(random)
                 val ball = Ball(x, y, 50f, color)
                 balls.add(ball)
                 lineBalls.add(ball)
@@ -101,16 +99,22 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
                     ball.y = y - offsetY
                 }
 
-                // 检查是否吸附
-                balls.forEach { ball ->
-                    if (ball !in selectedBalls) {
-                        selectedBalls.forEach { selectedBall ->
-                            val distance = hypot(ball.x - selectedBall.x, ball.y - selectedBall.y)
-                            val threshold = ball.radius + selectedBall.radius + 20
-                            if (distance < threshold) {
-                                ball.x = selectedBall.x
-                                ball.y = selectedBall.y
+                // 检查是否连接到其他直线底部的球上
+                lines.forEach { line ->
+                    if (line !== selectedBalls && line.isNotEmpty()) {
+                        val bottomBall = line.last()
+                        if (hypot(bottomBall.x - x, bottomBall.y - y) <= bottomBall.radius) {
+                            // 断开原来的直线
+                            selectedBalls.forEach { ball ->
+                                lines.forEach { oldLine ->
+                                    oldLine.remove(ball)
+                                }
                             }
+                            // 连接到新的直线
+                            line.addAll(selectedBalls)
+                            selectedBalls.clear()
+                            generateBallsAndLines()
+                            return true
                         }
                     }
                 }

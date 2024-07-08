@@ -15,5 +15,6 @@
     <com.funyoung.game.LinesView
         android:id="@+id/linesView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        tools:ignore="MissingClass" />
 </androidx.constraintlayout.widget.ConstraintLayout>
