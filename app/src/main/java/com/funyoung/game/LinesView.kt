@@ -15,7 +15,10 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
     private val lines = mutableListOf<MutableList<Ball>>()
     private val balls = mutableListOf<Ball>()
+
     private var selectedBalls = mutableListOf<Ball>()
+    private var selectedLine = -1
+
     private var offsetX = 0f
     private var offsetY = 0f
 
@@ -121,18 +124,44 @@ class LinesView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
         invalidate()
     }
 
+    // 遍历检查按下出，点中小球的所在栏(停止拖拽时可能回弹回来)
+    // 该小球和该栏它后面的小球都移进选择球的列表中
     private fun cutLine(x: Float, y: Float) {
+        var pos = -1
+        selectedLine = -1
+
         selectedBalls.clear()
-        lines.forEach { line ->
-            line.forEach { ball ->
+        lines.forEachIndexed { index, line ->
+            line.forEachIndexed { current, ball ->
                 if (hypot(ball.x - x, ball.y - y) <= ball.radius) {
-                    selectedBalls.add(ball)
+                    selectedLine = index
+                    pos = current
+                    //selectedBalls.add(ball)
+                    return@forEachIndexed // 退出当前的 forEachIndexed 循环
                 }
             }
+            if (pos >= 0 && selectedLine >= 0) {
+                return@forEachIndexed // 退出当前的 forEachIndexed 循环
+            }
         }
+
+        if (pos >= 0 && selectedLine >= 0) {
+            selectedBalls.addAll(lines[selectedLine].removeFrom(pos))
+        }
+
         offsetX = x - (selectedBalls.firstOrNull()?.x ?: 0f)
         offsetY = y - (selectedBalls.firstOrNull()?.y ?: 0f)
     }
+
+    private fun <T> MutableList<T>.removeFrom(index: Int): MutableList<T> {
+        if (index < 0 || index >= size) {
+            throw IndexOutOfBoundsException("Index: $index, Size: $size")
+        }
+        val removedElements = this.subList(index, this.size).toMutableList()
+        this.subList(index, this.size).clear()
+        return removedElements
+    }
+
 
     data class Ball(var x: Float, var y: Float, val radius: Float, val color: Int)
 }
