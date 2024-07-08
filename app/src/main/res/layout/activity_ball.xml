@@ -7,9 +7,13 @@
     tools:context="dragosholban.com.androidpuzzlegame.PuzzleActivity"
     android:background="@drawable/table_background">
 
-    <com.funyoung.game.BallsView
-        android:id="@+id/ballsView"
+<!--    <com.funyoung.game.BallsView-->
+<!--        android:id="@+id/ballsView"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent" />-->
+
+    <com.funyoung.game.LinesView
+        android:id="@+id/linesView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>
